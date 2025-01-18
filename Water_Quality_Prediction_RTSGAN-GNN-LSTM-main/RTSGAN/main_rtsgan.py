@@ -42,7 +42,7 @@ logger.info('Python random seed: {}'.format(python_seed))
 # ===-----------------------------------------------------------------------===
 # Read in dataset
 # ===-----------------------------------------------------------------------===
-dir_dataset=r'data\DATA_FOR_GAN_WITH_DO_TRAIN.pkl'
+dir_dataset=r'./data/DATA_FOR_GAN_WITH_DO_TRAIN.pkl'
 dataset = pickle.load(open(dir_dataset, "rb"))
 train_set=dataset["train_set"]
 dynamic_processor=dataset["dynamic_processor"]
@@ -91,10 +91,10 @@ print(params.keys())
 
 syn = AeGAN((static_processor, dynamic_processor), params)
 
-if params.eval_ae:
+if params['eval_ae']:
     logger.info("\n")
     logger.info("evaluate ae!")
-    syn.load_ae(params.fix_ae)
+    syn.load_ae(params['fix_ae'])
     res, h = syn.eval_ae(train_set)
     with open("{}/data".format(root_dir), "wb") as f:
         pickle.dump(res, f)
@@ -102,18 +102,18 @@ if params.eval_ae:
         pickle.dump(h, f)
     exit()
     
-if params.fix_ae is not None:
-    syn.load_ae(params.fix_ae)
+if params['fix_ae'] is not None:
+    syn.load_ae(params['fix_ae'])
 else:
-    syn.train_ae(train_set, params.epochs)
+    syn.train_ae(train_set, params['epochs'])
     res, h = syn.eval_ae(train_set)
     with open("{}/hidden".format(root_dir), "wb") as f:
         pickle.dump(h, f)
 
-if params.fix_gan is not None:
-    syn.load_generator(params.fix_gan)
+if params['fix_gan'] is not None:
+    syn.load_generator(params['fix_gan'])
 else:
-    syn.train_gan(train_set, params.iterations, params.d_update)
+    syn.train_gan(train_set, params['iterations'], params['d_update'])
 
 logger.info("\n")
 logger.info("Generating data!")
