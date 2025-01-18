@@ -747,3 +747,75 @@ print(reconstructed_data)
 ---
 
 En résumé, ce fichier fournit un cadre puissant pour prétraiter des tableaux avec des colonnes de types variés, en traitant les valeurs manquantes de manière élégante et en facilitant l'intégration dans un pipeline machine learning.
+
+L'inversion de l'ordre des données d'origine (avec la ligne suivante dans votre code) :  
+
+```python
+ori_data = ori_data[::-1]
+```
+
+est une étape qui peut être nécessaire dans certains cas, notamment dans le contexte de modèles comme les GANs appliqués aux séries temporelles (**RTSGAN**). Voici les principales raisons pour lesquelles on peut vouloir inverser l'ordre des données dans ce contexte.
+
+---
+
+### **1. Lien avec l'ordre chronologique des séries temporelles**
+
+Les séries temporelles ont généralement une direction intrinsèque : elles progressent dans le temps. Cependant, les modèles d'apprentissage automatique ou des réseaux comme RTSGAN peuvent être **insensibles à l'ordre naturel des séries temporelles**. En inversant l'ordre, vous effectuez un **prétraitement** ou une préparation spécifique pour l'entraînement, ce qui peut avoir des avantages :
+
+#### **1.1 Améliorer la généralisation du modèle**
+- Lorsque l'ordre est inversé, les dépendances temporelles dans les données sont également inversées. Cela force le modèle à apprendre des patterns plus globaux plutôt que de se concentrer uniquement sur la structure temporelle directe.
+- Cette stratégie peut être utile pour éviter un surapprentissage des dépendances temporelles strictes (comme une simple corrélation linéaire entre les valeurs successives).
+
+#### **1.2 Uniformiser les séquences**
+- Certains modèles (y compris RTSGAN) pourraient s'attendre à un certain format d'entrée ou à des séquences chronologiques inversées, surtout si l'architecture du modèle ou du pipeline de données est conçu pour fonctionner avec des séries temporelles inversées.
+- Inverser les données peut également être utile pour s'assurer que les séquences générées respectent certaines caractéristiques globales sans se limiter à un ordre temporel rigide.
+
+---
+
+### **2. Préparation pour la génération de séquences (overlapping windows)**
+
+Dans votre code, après avoir inversé les données, vous préparez les séquences comme suit :
+
+```python
+temp_data = [ori_data[i:i + seq_len] for i in range(0, len(ori_data) - seq_len)]
+```
+
+#### **Pourquoi inverser avant de créer les séquences ?**
+- Lorsque vous utilisez une fenêtre glissante pour créer des séquences dynamiques, l'inversion garantit que les **dernières valeurs de la série temporelle (les plus récentes)** sont incluses dans les premières séquences de la fenêtre glissante.
+- Cela peut être utile si vous voulez que les séquences soient centrées sur les valeurs les plus récentes, notamment pour des tâches comme la **prévision** ou lorsque les séries temporelles doivent être utilisées à rebours (dans certains modèles).
+
+---
+
+### **3. Lien avec RTSGAN**
+
+RTSGAN (ou tout GAN pour séries temporelles) est souvent utilisé pour générer des séries temporelles synthétiques. Contrairement à des modèles classiques de prévision, les GANs cherchent à capturer les **distributions globales** des données, sans se concentrer uniquement sur leur ordre temporel strict.
+
+#### **Avantages de l'inversion dans un GAN** :
+1. **Apprentissage des dépendances globales** : L'inversion force le modèle à s'entraîner sur des données dans les deux directions temporelles (avant et arrière), rendant l'apprentissage plus robuste.
+2. **Réduction de l'effet de bord** : Si vos données ont des effets de bord spécifiques (par exemple, des valeurs élevées ou basses au début ou à la fin), l'inversion peut répartir ces effets, améliorant ainsi la stabilité de l'entraînement.
+3. **Compatibilité avec certaines architectures GAN** : Dans certains cas, les architectures GAN peuvent traiter les données comme des **séquences sans direction temporelle stricte**. L'inversion assure que le modèle ne privilégie pas un ordre particulier.
+
+---
+
+### **4. Cas où l'inversion n'est pas nécessaire**
+
+L'inversion des données n'est pas toujours requise. Si votre tâche repose sur des dépendances temporelles strictes (par exemple, **prévision** ou **analyse causale**), il peut être préférable de conserver l'ordre d'origine.
+
+Cependant, dans le cadre d'un GAN pour séries temporelles, l'objectif principal est souvent de capturer les **propriétés statistiques et globales** de la série, ce qui rend l'inversion utile pour introduire une sorte d'augmentation des données.
+
+---
+
+### **5. Résumé des raisons principales pour inverser les données**
+| Raison                          | Description                                                                                      |
+|---------------------------------|--------------------------------------------------------------------------------------------------|
+| **Généralisation**              | Éviter que le modèle se focalise sur des dépendances temporelles strictes, apprendre des patterns globaux. |
+| **Préparation pour RTSGAN**     | Inverser les données peut être attendu par certains modèles GAN pour capturer des relations bidirectionnelles. |
+| **Réduction des biais**         | Répartir les effets de bord ou les valeurs extrêmes de manière uniforme dans les données d'entraînement. |
+| **Création de séquences**       | Assurer que les séquences contiennent les dernières valeurs (les plus récentes) en priorité.     |
+
+---
+
+### **Conclusion**
+L'inversion des données est une étape qui peut sembler contre-intuitive dans le traitement de séries temporelles, mais elle est souvent utilisée dans des modèles comme RTSGAN pour des raisons liées à l'apprentissage des patterns globaux, la stabilité du modèle et l'uniformisation des séquences.
+
+Dans votre cas, l'inversion est probablement une étape nécessaire pour garantir que vos séquences sont bien préparées pour l'architecture RTSGAN, tout en évitant que le modèle dépende trop fortement de la direction temporelle originale des données. Si vous avez des besoins spécifiques (comme la reconstruction des séries dans leur ordre d'origine), vous pourrez inverser les données **après la génération**.
